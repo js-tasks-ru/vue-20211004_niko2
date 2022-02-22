@@ -1,27 +1,33 @@
 <template>
-  <div class="dropdown" :class="{ dropdown_opened: isOpen }">
-    <button type="button" class="dropdown__toggle" :class="{ dropdown__toggle_icon: hasIcons }" @click="toggleOpen">
+  <div class="dropdown" :class="{ dropdown_opened: isDropdownOpen }">
+    <button type="button" class="dropdown__toggle" :class="{ dropdown__toggle_icon: hasIcons }" @click="toggleDropdown">
       <ui-icon v-if="selected?.icon" :icon="selected.icon" class="dropdown__icon" />
       <span>{{ modelValue ? selected?.text : title }}</span>
     </button>
 
-    <div v-show="isOpen" class="dropdown__menu" role="listbox">
+    <div v-show="isDropdownOpen" class="dropdown__menu" role="listbox">
       <button
         v-for="option in options"
         :key="option.value"
         class="dropdown__item"
-        :class="{ dropdown__item_icon: hasIcons }"
         role="option"
         type="button"
+        :class="{ dropdown__item_icon: hasIcons }"
         @click="select(option.value)"
       >
         <ui-icon v-if="option.icon" :icon="option.icon" class="dropdown__icon" />
         {{ option.text }}
       </button>
     </div>
-
-    <select v-model="selectModel" style="display: none">
-      <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
+    <select style="display: none" @change="$emit('update:modelValue', $event.target.value)">
+      <option
+        v-for="option in options"
+        :key="option.value"
+        :value="option.value"
+        :selected="option.value === selected?.value"
+      >
+        {{ option.text }}
+      </option>
     </select>
   </div>
 </template>
@@ -35,17 +41,13 @@ export default {
   components: { UiIcon },
 
   props: {
-    modelValue: {},
-
     options: {
       type: Array,
       required: true,
-      validator: (options) =>
-        options.every(
-          (option) => typeof option === 'object' && option !== null && 'value' in option && 'text' in option,
-        ),
     },
-
+    modelValue: {
+      type: String,
+    },
     title: {
       type: String,
       required: true,
@@ -56,7 +58,7 @@ export default {
 
   data() {
     return {
-      isOpen: false,
+      isDropdownOpen: false,
     };
   },
 
@@ -68,25 +70,14 @@ export default {
     hasIcons() {
       return this.options.some((option) => option.icon);
     },
-
-    selectModel: {
-      get() {
-        return this.modelValue;
-      },
-
-      set(value) {
-        this.select(value);
-      },
-    },
   },
 
   methods: {
-    toggleOpen() {
-      this.isOpen = !this.isOpen;
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
     },
-
     select(value) {
-      this.isOpen = false;
+      this.isDropdownOpen = false;
       this.$emit('update:modelValue', value);
     },
   },
